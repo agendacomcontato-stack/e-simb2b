@@ -1,0 +1,791 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebApp Universitário - Firebase + Apps Script</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --nubuck-brown: #8b7355;
+            --nubuck-light: #a68b5b;
+            --nubuck-dark: #6b5b47;
+            --nubuck-cream: #f5f1eb;
+            --nubuck-gold: #c49b61;
+            --primary-black: #0a0a0a;
+            --font-serif: 'Playfair Display', serif;
+            --font-sans: 'Inter', sans-serif;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: var(--font-sans);
+            background: linear-gradient(145deg, var(--primary-black) 0%, var(--nubuck-dark) 70%, var(--nubuck-brown) 100%);
+            min-height: 100vh;
+            color: var(--nubuck-cream);
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(139, 115, 85, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(196, 155, 97, 0.3);
+            box-shadow: 0 16px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--nubuck-gold);
+        }
+        
+        h1 {
+            font-family: var(--font-serif);
+            color: var(--nubuck-gold);
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 15px rgba(196, 155, 97, 0.3);
+        }
+        
+        .subtitle {
+            color: var(--nubuck-light);
+            font-size: 16px;
+            font-weight: 300;
+        }
+        
+        .section {
+            margin: 30px 0;
+            padding: 25px;
+            border: 2px solid rgba(196, 155, 97, 0.3);
+            border-radius: 15px;
+            background: linear-gradient(135deg, rgba(139, 115, 85, 0.05) 0%, rgba(196, 155, 97, 0.02) 100%);
+        }
+        
+        .section h2 {
+            font-family: var(--font-serif);
+            color: var(--nubuck-gold);
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+        
+        .connection-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .connection-card {
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid rgba(196, 155, 97, 0.2);
+            background: rgba(139, 115, 85, 0.08);
+            text-align: center;
+        }
+        
+        .connection-card h3 {
+            margin-bottom: 10px;
+            color: var(--nubuck-gold);
+        }
+        
+        .status {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 14px;
+            margin: 10px 0;
+            display: inline-block;
+        }
+        
+        .status.connected { background: rgba(34, 197, 94, 0.2); color: #bbf7d0; }
+        .status.disconnected { background: rgba(220, 38, 38, 0.2); color: #fecaca; }
+        .status.loading { background: rgba(245, 158, 11, 0.2); color: #fef3c7; }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin: 25px 0;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, var(--nubuck-light) 0%, var(--nubuck-brown) 100%);
+            padding: 25px;
+            border-radius: 12px;
+            text-align: center;
+            color: white;
+            box-shadow: 0 8px 25px rgba(139, 115, 85, 0.3);
+        }
+        
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+            font-family: var(--font-serif);
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+        
+        input {
+            background: rgba(139, 115, 85, 0.15);
+            border: 2px solid rgba(196, 155, 97, 0.3);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: var(--nubuck-cream);
+            font-size: 16px;
+            min-width: 250px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        
+        input:focus {
+            border-color: var(--nubuck-gold);
+            background: rgba(139, 115, 85, 0.2);
+            box-shadow: 0 0 0 3px rgba(196, 155, 97, 0.1);
+        }
+        
+        input::placeholder {
+            color: rgba(245, 241, 235, 0.6);
+        }
+        
+        button {
+            background: linear-gradient(135deg, var(--nubuck-gold) 0%, var(--nubuck-brown) 100%);
+            color: var(--nubuck-cream);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(196, 155, 97, 0.4);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: rgba(139, 115, 85, 0.3);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--nubuck-gold) 0%, #d4af37 100%);
+            font-size: 16px;
+            padding: 15px 30px;
+        }
+        
+        .log-container {
+            background: rgba(0, 0, 0, 0.6);
+            border: 2px solid var(--nubuck-gold);
+            border-radius: 8px;
+            padding: 20px;
+            height: 250px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            margin: 20px 0;
+        }
+        
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px 0;
+            border-bottom: 1px solid rgba(196, 155, 97, 0.1);
+        }
+        
+        .log-entry.success { color: #4ade80; }
+        .log-entry.error { color: #ef4444; }
+        .log-entry.info { color: #3b82f6; }
+        .log-entry.warning { color: #f59e0b; }
+        
+        .academic-footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 20px;
+            border-top: 1px solid var(--nubuck-gold);
+            font-size: 12px;
+            color: var(--nubuck-light);
+            line-height: 1.6;
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid rgba(196, 155, 97, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--nubuck-gold);
+            animation: spin 1s ease-in-out infinite;
+            margin-left: 8px;
+        }
+
+        .config-section {
+            background: rgba(220, 38, 38, 0.1);
+            border: 2px solid rgba(220, 38, 38, 0.3);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+        }
+
+        .config-section h2 {
+            color: #fecaca;
+        }
+
+        .url-input {
+            width: 100%;
+            min-width: auto;
+            margin: 10px 0;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: 500;
+        }
+
+        .alert.warning {
+            background: rgba(245, 158, 11, 0.2);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            color: #fef3c7;
+        }
+
+        .alert.success {
+            background: rgba(34, 197, 94, 0.2);
+            border: 1px solid rgba(34, 197, 94, 0.4);
+            color: #bbf7d0;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                padding: 20px;
+            }
+            
+            .connection-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .input-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            input {
+                min-width: auto;
+                width: 100%;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>WebApp Universitário</h1>
+            <div class="subtitle">
+                Projeto Acadêmico | Firebase Hosting + Apps Script Backend
+                <br>Desenvolvimento 100% Browser-based
+            </div>
+        </div>
+
+        <!-- Configuração do Apps Script -->
+        <div class="config-section">
+            <h2>⚙️ Configuração do Apps Script</h2>
+            <div class="alert warning">
+                <strong>Atenção:</strong> Configure a URL do seu Apps Script abaixo para ativar a funcionalidade completa.
+            </div>
+            <div class="input-group">
+                <input type="url" 
+                       id="appsScriptUrlInput" 
+                       class="url-input"
+                       placeholder="Cole aqui a URL do seu Google Apps Script (https://script.google.com/macros/s/...)"
+                       value="">
+                <button onclick="configurarAppsScript()">Configurar URL</button>
+                <button onclick="testarConexaoManual()">Testar</button>
+            </div>
+            <div id="configStatus"></div>
+        </div>
+
+        <!-- Status das Conexões -->
+        <div class="section">
+            <h2>Conexões do Sistema</h2>
+            <div class="connection-grid">
+                <div class="connection-card">
+                    <h3>Firebase Hosting</h3>
+                    <div class="status connected" id="firebaseStatus">Conectado</div>
+                    <div>Frontend hospedado</div>
+                </div>
+                <div class="connection-card">
+                    <h3>Apps Script API</h3>
+                    <div class="status disconnected" id="appsScriptStatus">Não configurado</div>
+                    <div>Backend independente</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estatísticas -->
+        <div class="section">
+            <h2>Estatísticas do Sistema</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="uniqueClicks">-</div>
+                    <div class="stat-label">Cliques Únicos</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="duplicateClicks">-</div>
+                    <div class="stat-label">Duplicados</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalClicks">-</div>
+                    <div class="stat-label">Total Geral</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="lastUpdate">-</div>
+                    <div class="stat-label">Última Atualização</div>
+                </div>
+            </div>
+            <button class="btn-primary" onclick="atualizarEstatisticas()">
+                Atualizar Dados <span id="loadingStats"></span>
+            </button>
+        </div>
+
+        <!-- Registro de Clique -->
+        <div class="section">
+            <h2>Registrar Participação</h2>
+            <div class="input-group">
+                <input type="email" id="emailInput" placeholder="Seu email universitário (@universidade.edu.br)">
+                <button onclick="registrarClique()">Registrar Clique</button>
+                <button onclick="gerarToken()">Gerar Token</button>
+            </div>
+        </div>
+
+        <!-- Log do Sistema -->
+        <div class="section">
+            <h2>Log de Atividades</h2>
+            <div class="log-container" id="logContainer">
+                <div class="log-entry info">Sistema inicializado - Configure a URL do Apps Script acima...</div>
+            </div>
+            <button onclick="limparLog()">Limpar Log</button>
+            <button onclick="testarConexao()">Testar Conexão</button>
+        </div>
+
+        <!-- Footer Acadêmico -->
+        <div class="academic-footer">
+            <strong>Projeto Acadêmico - Ciência da Computação</strong><br>
+            Tecnologias: Firebase Hosting + Google Apps Script + HTML5/CSS3/JavaScript<br>
+            Arquitetura: Frontend hospedado no Firebase | Backend independente no Apps Script<br>
+            Desenvolvimento: 100% browser-based | Zero instalações necessárias<br>
+            <br>
+            <em>Demonstração de integração entre plataformas cloud para aplicações web acadêmicas</em>
+        </div>
+    </div>
+
+    <script>
+        // ================= CONFIGURAÇÃO =================
+        
+        let APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxBSOIPiNAUJky4BB7YJwf_h80KilHLQxquJUG7bBywAbfEkXD3efmvGCKmRGQ8WhtT/exec'; // Será configurado dinamicamente
+        
+        // Configurações do sistema
+        const CONFIG = {
+            maxLogEntries: 50,
+            autoUpdateInterval: 30000, // 30 segundos
+            retryAttempts: 3,
+            retryDelay: 1000
+        };
+
+        // ================= FUNÇÕES DE LOG =================
+        
+        function log(message, type = 'info') {
+            const logContainer = document.getElementById('logContainer');
+            const timestamp = new Date().toLocaleTimeString('pt-BR');
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${type}`;
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            
+            logContainer.appendChild(logEntry);
+            
+            // Limitar número de entradas
+            const entries = logContainer.querySelectorAll('.log-entry');
+            if (entries.length > CONFIG.maxLogEntries) {
+                entries[0].remove();
+            }
+            
+            // Scroll para o final
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        function limparLog() {
+            document.getElementById('logContainer').innerHTML = '';
+            log('Log do sistema limpo', 'info');
+        }
+
+        // ================= CONFIGURAÇÃO APPS SCRIPT =================
+        
+        function configurarAppsScript() {
+            const input = document.getElementById('appsScriptUrlInput');
+            const url = input.value.trim();
+            
+            if (!url) {
+                log('Erro: URL do Apps Script é obrigatória', 'error');
+                return;
+            }
+            
+            if (!url.includes('script.google.com')) {
+                log('Erro: URL deve ser do Google Apps Script', 'error');
+                return;
+            }
+            
+            APPS_SCRIPT_URL = url;
+            log(`Apps Script configurado: ${url.substring(0, 50)}...`, 'success');
+            
+            // Atualizar status
+            const statusDiv = document.getElementById('configStatus');
+            statusDiv.innerHTML = '<div class="alert success">✅ Apps Script URL configurada! Teste a conexão agora.</div>';
+            
+            // Testar conexão automaticamente
+            setTimeout(verificarConexaoAppsScript, 1000);
+        }
+
+        function testarConexaoManual() {
+            if (!APPS_SCRIPT_URL) {
+                log('Configure a URL do Apps Script primeiro', 'warning');
+                return;
+            }
+            verificarConexaoAppsScript();
+        }
+
+        // ================= FUNÇÕES DE CONEXÃO CORRIGIDAS =================
+        
+        async function verificarConexaoAppsScript() {
+            if (!APPS_SCRIPT_URL) {
+                const statusElement = document.getElementById('appsScriptStatus');
+                statusElement.className = 'status disconnected';
+                statusElement.textContent = 'Não configurado';
+                return false;
+            }
+
+            const statusElement = document.getElementById('appsScriptStatus');
+            statusElement.className = 'status loading';
+            statusElement.textContent = 'Testando...';
+            
+            try {
+                log('Testando conexão com Apps Script...', 'info');
+                
+                // Usar GET com parâmetros para teste
+                const testUrl = `${APPS_SCRIPT_URL}?acao=ping&timestamp=${Date.now()}`;
+                
+                const response = await fetch(testUrl, {
+                    method: 'GET',
+                    cache: 'no-cache',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    statusElement.className = 'status connected';
+                    statusElement.textContent = 'Conectado';
+                    log('Apps Script: Conexão estabelecida ✓', 'success');
+                    log(`Resposta: ${JSON.stringify(data)}`, 'info');
+                    return true;
+                } else {
+                    throw new Error(`Status: ${response.status}`);
+                }
+                
+            } catch (error) {
+                statusElement.className = 'status disconnected';
+                statusElement.textContent = 'Erro de conexão';
+                log(`Erro na conexão: ${error.message}`, 'error');
+                log('Verifique: 1) URL correta 2) Script publicado 3) Permissões de acesso', 'warning');
+                return false;
+            }
+        }
+
+        async function testarConexao() {
+            log('Iniciando teste de conexão completo...', 'info');
+            const conectado = await verificarConexaoAppsScript();
+            
+            if (conectado) {
+                try {
+                    await atualizarEstatisticas();
+                    log('Teste completo da API: SUCESSO ✓', 'success');
+                } catch (error) {
+                    log('Teste da API falhou - verifique configurações do Apps Script', 'error');
+                }
+            }
+        }
+
+        // ================= FUNÇÕES DE API CORRIGIDAS =================
+        
+        async function chamarAppsScript(acao, dados = {}) {
+            if (!APPS_SCRIPT_URL) {
+                throw new Error('Apps Script URL não configurada');
+            }
+
+            try {
+                log(`Chamando API: ${acao}`, 'info');
+                
+                // Método GET com parâmetros para Apps Script
+                const params = new URLSearchParams({
+                    acao: acao,
+                    timestamp: Date.now(),
+                    ...dados
+                });
+                
+                const url = `${APPS_SCRIPT_URL}?${params.toString()}`;
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    cache: 'no-cache',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const result = await response.json();
+                log(`Resposta recebida: ${JSON.stringify(result).substring(0, 100)}...`, 'info');
+                
+                return result;
+                
+            } catch (error) {
+                log(`Erro na chamada API: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+
+        // ================= FUNÇÕES PRINCIPAIS CORRIGIDAS =================
+        
+        async function registrarClique() {
+            const email = document.getElementById('emailInput').value.trim();
+            
+            if (!email) {
+                log('Erro: Email é obrigatório', 'error');
+                return;
+            }
+            
+            if (!email.includes('@')) {
+                log('Erro: Email inválido', 'error');
+                return;
+            }
+            
+            if (!APPS_SCRIPT_URL) {
+                log('Erro: Configure o Apps Script primeiro', 'error');
+                return;
+            }
+            
+            try {
+                log(`Registrando clique para: ${email}`, 'info');
+                
+                const resultado = await chamarAppsScript('registrarClique', { email });
+                
+                if (resultado) {
+                    if (resultado.erro) {
+                        log(`Erro do servidor: ${resultado.erro}`, 'error');
+                    } else if (resultado.sucesso !== false) {
+                        log(`✓ ${resultado.mensagem || 'Clique registrado com sucesso'}`, 'success');
+                        document.getElementById('emailInput').value = '';
+                        // Atualizar estatísticas após sucesso
+                        setTimeout(atualizarEstatisticas, 1000);
+                    } else {
+                        log(`Aviso: ${resultado.mensagem || 'Operação pode ter falhado'}`, 'warning');
+                    }
+                } else {
+                    log('Resposta vazia do servidor', 'warning');
+                }
+                
+            } catch (error) {
+                log(`Erro ao registrar clique: ${error.message}`, 'error');
+            }
+        }
+
+        async function gerarToken() {
+            const email = document.getElementById('emailInput').value.trim();
+            
+            if (!email) {
+                log('Erro: Email é obrigatório para gerar token', 'error');
+                return;
+            }
+            
+            if (!APPS_SCRIPT_URL) {
+                log('Erro: Configure o Apps Script primeiro', 'error');
+                return;
+            }
+            
+            try {
+                log(`Gerando token para: ${email}`, 'info');
+                
+                const resultado = await chamarAppsScript('gerarToken', { email });
+                
+                if (resultado) {
+                    if (resultado.erro) {
+                        log(`Erro: ${resultado.erro}`, 'error');
+                    } else {
+                        log(`✓ ${resultado.mensagem || 'Token gerado com sucesso'}`, 'success');
+                        if (resultado.token) {
+                            log(`Token de desenvolvimento: ${resultado.token}`, 'info');
+                        }
+                    }
+                }
+                
+            } catch (error) {
+                log(`Erro ao gerar token: ${error.message}`, 'error');
+            }
+        }
+
+        async function atualizarEstatisticas() {
+            const loadingElement = document.getElementById('loadingStats');
+            loadingElement.innerHTML = '<span class="loading-spinner"></span>';
+            
+            if (!APPS_SCRIPT_URL) {
+                log('Configure o Apps Script para ver estatísticas reais', 'warning');
+                // Mostrar dados padrão
+                document.getElementById('uniqueClicks').textContent = '0';
+                document.getElementById('duplicateClicks').textContent = '0';
+                document.getElementById('totalClicks').textContent = '0';
+                document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('pt-BR');
+                loadingElement.innerHTML = '';
+                return;
+            }
+            
+            try {
+                log('Buscando estatísticas...', 'info');
+                
+                const stats = await chamarAppsScript('obterEstatisticas');
+                
+                if (stats && !stats.erro) {
+                    const unicos = stats.totalUnicos || 0;
+                    const duplicados = stats.totalDuplicados || 0;
+                    const total = unicos + duplicados;
+                    
+                    document.getElementById('uniqueClicks').textContent = unicos;
+                    document.getElementById('duplicateClicks').textContent = duplicados;
+                    document.getElementById('totalClicks').textContent = total;
+                    document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString('pt-BR');
+                    
+                    log(`✓ Estatísticas: ${unicos} únicos, ${duplicados} duplicados`, 'success');
+                    
+                    if (stats.debug) {
+                        log(`Debug - Linhas: únicos(${stats.debug.linhasUnicos}), duplicados(${stats.debug.linhasDuplicados})`, 'info');
+                    }
+                    
+                    if (stats.email) {
+                        log(`Usuário identificado: ${stats.email}`, 'info');
+                    }
+                    
+                } else {
+                    if (stats?.erro) {
+                        log(`Erro nas estatísticas: ${stats.erro}`, 'error');
+                    }
+                    // Mostrar dados padrão em caso de erro
+                    document.getElementById('uniqueClicks').textContent = '0';
+                    document.getElementById('duplicateClicks').textContent = '0';
+                    document.getElementById('totalClicks').textContent = '0';
+                    document.getElementById('lastUpdate').textContent = 'Erro';
+                }
+                
+            } catch (error) {
+                log(`Erro ao buscar estatísticas: ${error.message}`, 'error');
+                document.getElementById('uniqueClicks').textContent = 'Erro';
+                document.getElementById('duplicateClicks').textContent = 'Erro'; 
+                document.getElementById('totalClicks').textContent = 'Erro';
+                document.getElementById('lastUpdate').textContent = 'Erro';
+            } finally {
+                loadingElement.innerHTML = '';
+            }
+        }
+
+        // ================= INICIALIZAÇÃO =================
+        
+        async function inicializar() {
+            log('Inicializando sistema...', 'info');
+            log('Frontend: Firebase Hosting ✓', 'success');
+            
+            // Carregar estatísticas iniciais (com dados padrão se não configurado)
+            await atualizarEstatisticas();
+            
+            log('Sistema inicializado! Configure a URL do Apps Script para dados reais.', 'success');
+        }
+
+        // ================= EVENT LISTENERS =================
+        
+        document.addEventListener('DOMContentLoaded', inicializar);
+        
+        // Enter para registrar clique
+        document.getElementById('emailInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                registrarClique();
+            }
+        });
+
+        // Enter para configurar Apps Script
+        document.getElementById('appsScriptUrlInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                configurarAppsScript();
+            }
+        });
+
+        // ================= UTILITÁRIOS =================
+        
+        // Função para debug
+        window.debug = {
+            log: log,
+            testarAPI: () => chamarAppsScript('obterEstatisticas'),
+            config: CONFIG,
+            getUrl: () => APPS_SCRIPT_URL,
+            setUrl: (url) => { 
+                APPS_SCRIPT_URL = url; 
+                document.getElementById('appsScriptUrlInput').value = url;
+                log('URL definida via debug', 'info'); 
+            },
+            testarPlanilha: () => chamarAppsScript('ping')
+        };
+
+        console.log('Debug disponível via window.debug - use debug.testarAPI() para testar');
+    </script>
+</body>
+</html>
